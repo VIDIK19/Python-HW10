@@ -1,5 +1,4 @@
-from datetime import date, datetime
-
+from datetime import date, datetime, timedelta
 
 def get_birthdays_per_week(users):
     today = date.today()
@@ -8,32 +7,37 @@ def get_birthdays_per_week(users):
 
     for user in users:
         birthday = user["birthday"]
-        # If birthday has already passed this year, consider next year
-        if birthday.replace(year=today.year) < today:
-            birthday = birthday.replace(year=today.year + 1)
-
-        # Check if the birthday falls within the next week
-        if 0 <= (birthday - today).days < 7:
-            day_name = weekdays[birthday.weekday()]
-            
-            # If birthday falls on a weekend, add it to Monday
-            if birthday.weekday() >= 5:
-                day_name = "Monday"
-            
+        current_year_birthday = birthday.replace(year=today.year)
+        # Calculate the number of days until the next birthday
+        days_to_birthday = (current_year_birthday - today).days
+        if current_year_birthday < today:  # The birthday has passed this year
+            days_to_birthday = (current_year_birthday.replace(year=today.year + 1) - today).days
+        
+        # Calculate the birthday weekday index, ensuring we shift weekend birthdays to Monday
+        birthday_weekday = (today + timedelta(days=days_to_birthday)).weekday()
+        if birthday_weekday >= 5:  # Shift weekend birthdays to Monday
+            day_name = "Monday"
+        else:
+            day_name = weekdays[birthday_weekday]  # Weekday birthday
+        
+        # Add only upcoming or current day birthdays to the weekdays list
+        if 0 <= days_to_birthday <= 6:
             birthdays_per_week[day_name].append(user["name"])
 
-    # Remove days without birthdays
-    return {k: v for k, v in birthdays_per_week.items() if v}
-    return users
-
+    # Remove weekdays without any birthdays
+    birthdays_per_week = {day: names for day, names in birthdays_per_week.items() if names}
+    return birthdays_per_week
 
 if __name__ == "__main__":
     users = [
-        {"name": "Jan Koum", "birthday": datetime(1976, 1, 1).date()},
+        {"name": "Jan Koum", "birthday": datetime(1976, 2, 24).date()},
+        {"name": "Bill Gates", "birthday": datetime(1955, 10, 28).date()},
+        # Test for a birthday this week but on a weekend
+        {"name": "Test User", "birthday": (today + timedelta(days=today.weekday() + 1)).replace(year=today.year).date()} 
     ]
 
     result = get_birthdays_per_week(users)
-    print(result)
-    # Виводимо результат
+    print(result)  # Виводимо результат
     for day_name, names in result.items():
         print(f"{day_name}: {', '.join(names)}")
+
