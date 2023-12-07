@@ -22,9 +22,7 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, value):
-        super().__init__(value)
-        if not self.validate(self.value):
-            raise ValueError("Phone number must contain 10 digits.")
+        self.value = value  # Використовуйте сеттер для ініціалізації значення
 
     @property
     def value(self):
@@ -40,12 +38,8 @@ class Phone(Field):
     def validate(phone):
         return bool(re.match(r"^\d{10}$", phone))
 
-class Birthday(Field):
-    def __init__(self, value):
-        super().__init__(value)
-        if not self.validate(self.value):
-            raise ValueError("Birthday must be in the format YYYY-MM-DD.")
 
+class Birthday(Field):
     @property
     def value(self):
         return self._value
@@ -63,6 +57,7 @@ class Birthday(Field):
             return True
         except ValueError:
             return False
+
 
 class Record:
     def __init__(self, name, birthday=None):
